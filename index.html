@@ -1,138 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Work Time Tracker</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Work Time Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        * { box-sizing: border-box; }
+  <style>
+    * { box-sizing: border-box; }
 
-        body {
-            margin: 0;
-            font-family: "Segoe UI", Arial, sans-serif;
-            background: #f3f4f6;
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-        }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #f3f4f6;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
 
-        .app {
-            background: white;
-            width: 100%;
-            max-width: 420px;
-            border-radius: 18px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        }
+    .app {
+      background: white;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
 
-        h2 {
-            text-align: center;
-            margin-bottom: 5px;
-        }
+    h2 {
+      text-align: center;
+      margin-bottom: 5px;
+    }
 
-        .date {
-            text-align: center;
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
+    .date {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
 
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
 
-        .card {
-            background: #f9fafb;
-            padding: 12px;
-            border-radius: 14px;
-            text-align: center;
-        }
+    .card {
+      background: #f9fafb;
+      padding: 12px;
+      border-radius: 14px;
+      text-align: center;
+    }
 
-        .label {
-            font-size: 12px;
-            color: #666;
-        }
+    .label {
+      font-size: 12px;
+      color: #666;
+    }
 
-        .value {
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 4px;
-        }
+    .value {
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 4px;
+    }
 
-        button {
-            width: 100%;
-            border: none;
-            padding: 14px;
-            font-size: 16px;
-            border-radius: 14px;
-            margin-top: 10px;
-            cursor: pointer;
-        }
+    button {
+      width: 100%;
+      border: none;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 14px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
 
-        .start { background: #22c55e; color: white; }
-        .pause { background: #facc15; }
-        .stop  { background: #ef4444; color: white; }
-        .task  { background: #3b82f6; color: white; }
+    .start { background: #22c55e; color: white; }
+    .pause { background: #facc15; }
+    .stop  { background: #ef4444; color: white; }
+    .task  { background: #3b82f6; color: white; }
 
-        .section {
-            margin-top: 25px;
-        }
-
-        select {
-            width: 100%;
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid #ddd;
-            margin-top: 10px;
-            font-size: 15px;
-        }
-
-        .download {
-            background: #111827;
-            color: white;
-            margin-top: 10px;
-        }
-    </style>
+    .section {
+      margin-top: 25px;
+    }
+  </style>
 </head>
 
 <body>
 
 <div class="app">
-    <h2>Work Tracker</h2>
-    <div class="date" id="today"></div>
+  <h2>Work Tracker</h2>
+  <div class="date" id="today"></div>
 
-    <div class="stats">
-        <div class="card">
-            <div class="label">Time</div>
-            <div class="value" id="time">00:00:00</div>
-        </div>
-        <div class="card">
-            <div class="label">Tasks</div>
-            <div class="value" id="tasks">0</div>
-        </div>
-        <div class="card">
-            <div class="label">Earnings</div>
-            <div class="value">$<span id="earnings">0.00</span></div>
-        </div>
+  <div class="stats">
+    <div class="card">
+      <div class="label">Time</div>
+      <div class="value" id="time">00:00:00</div>
     </div>
-
-    <button class="start" onclick="startTimer()">Start</button>
-    <button class="pause" onclick="pauseTimer()">Pause</button>
-    <button class="stop" onclick="stopTimer()">Stop</button>
-    <button class="task" onclick="addTask()">+ Task</button>
-
-    <div class="section">
-        <h3>Download Report</h3>
-        <select id="dateSelect"></select>
-        <button class="download" onclick="downloadReport()">Download</button>
+    <div class="card">
+      <div class="label">Tasks</div>
+      <div class="value" id="tasks">0</div>
     </div>
+    <div class="card">
+      <div class="label">Earnings</div>
+      <div class="value">$<span id="earnings">0.00</span></div>
+    </div>
+  </div>
+
+  <button class="start" onclick="startTimer()">Start</button>
+  <button class="pause" onclick="pauseTimer()">Pause</button>
+  <button class="stop" onclick="stopTimer()">Stop</button>
+  <button class="task" onclick="addTask()">+ Task</button>
 </div>
 
-<script>
-const RATE_PER_HOUR = 4; // USD
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* 🔴 REPLACE FIREBASE VALUES */
+const firebaseConfig = {
+  apiKey: "AIzaSyAkKVN3_8HM47q4U-kfASwJ4HK0bmmK08o",
+  authDomain: "work-tracker-a1314.firebaseapp.com",
+  projectId: "work-tracker-a1314",
+  storageBucket: "work-tracker-a1314.firebasestorage.app",
+  messagingSenderId: "645324585996",
+  appId: "1:645324585996:web:199fe12078850c04e00229"
+
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* 🔴 USE YOUR OWN EMAIL + PASSWORD */
+const EMAIL = "your@email.com";
+const PASSWORD = "123456"; // min 6 chars
+
+signInWithEmailAndPassword(auth, EMAIL, PASSWORD)
+  .catch(() => createUserWithEmailAndPassword(auth, EMAIL, PASSWORD));
+
+const RATE_PER_HOUR = 4;
 
 let startTime = null;
 let elapsedTime = 0;
@@ -142,112 +149,84 @@ let tasks = 0;
 const today = new Date().toISOString().split("T")[0];
 document.getElementById("today").innerText = today;
 
-loadTodayData();
-loadDateList();
-
 function startTimer() {
-    if (!timerInterval) {
-        startTime = Date.now() - elapsedTime;
-        timerInterval = setInterval(updateTime, 1000);
-    }
+  if (!timerInterval) {
+    startTime = Date.now() - elapsedTime;
+    timerInterval = setInterval(updateTime, 1000);
+  }
 }
 
 function pauseTimer() {
-    clearInterval(timerInterval);
-    timerInterval = null;
-    saveData();
+  clearInterval(timerInterval);
+  timerInterval = null;
+  saveData();
 }
 
 function stopTimer() {
-    clearInterval(timerInterval);
-    timerInterval = null;
-    saveData();
+  clearInterval(timerInterval);
+  timerInterval = null;
+  saveData();
 }
 
 function updateTime() {
-    elapsedTime = Date.now() - startTime;
-    document.getElementById("time").innerText = formatTime(elapsedTime);
-    updateEarnings();
+  elapsedTime = Date.now() - startTime;
+  document.getElementById("time").innerText = formatTime(elapsedTime);
+  updateEarnings();
 }
 
 function updateEarnings() {
-    const hours = elapsedTime / (1000 * 60 * 60);
-    const earnings = hours * RATE_PER_HOUR;
-    document.getElementById("earnings").innerText = earnings.toFixed(2);
+  const hours = elapsedTime / (1000 * 60 * 60);
+  document.getElementById("earnings").innerText = (hours * RATE_PER_HOUR).toFixed(2);
 }
 
 function formatTime(ms) {
-    let s = Math.floor(ms / 1000);
-    let h = Math.floor(s / 3600);
-    let m = Math.floor((s % 3600) / 60);
-    s = s % 60;
-    return `${pad(h)}:${pad(m)}:${pad(s)}`;
+  let s = Math.floor(ms / 1000);
+  let h = Math.floor(s / 3600);
+  let m = Math.floor((s % 3600) / 60);
+  s = s % 60;
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
 
 function pad(n) {
-    return n.toString().padStart(2, "0");
+  return n.toString().padStart(2, "0");
 }
 
 function addTask() {
-    tasks++;
+  tasks++;
+  document.getElementById("tasks").innerText = tasks;
+  saveData();
+}
+
+async function saveData() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  await setDoc(doc(db, "work", user.uid, "days", today), {
+    time: elapsedTime,
+    tasks: tasks
+  });
+}
+
+async function loadTodayData() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const snap = await getDoc(doc(db, "work", user.uid, "days", today));
+  if (snap.exists()) {
+    const d = snap.data();
+    elapsedTime = d.time;
+    tasks = d.tasks;
+    document.getElementById("time").innerText = formatTime(elapsedTime);
     document.getElementById("tasks").innerText = tasks;
-    saveData();
+    updateEarnings();
+  }
 }
 
-function saveData() {
-    localStorage.setItem(today, JSON.stringify({
-        time: elapsedTime,
-        tasks: tasks
-    }));
-    loadDateList();
-}
-
-function loadTodayData() {
-    const data = localStorage.getItem(today);
-    if (data) {
-        const d = JSON.parse(data);
-        elapsedTime = d.time;
-        tasks = d.tasks;
-        document.getElementById("time").innerText = formatTime(elapsedTime);
-        document.getElementById("tasks").innerText = tasks;
-        updateEarnings();
-    }
-}
-
-function loadDateList() {
-    const select = document.getElementById("dateSelect");
-    select.innerHTML = "";
-    Object.keys(localStorage).forEach(key => {
-        if (key.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            const opt = document.createElement("option");
-            opt.value = key;
-            opt.text = key;
-            select.appendChild(opt);
-        }
-    });
-}
-
-function downloadReport() {
-    const date = document.getElementById("dateSelect").value;
-    const data = JSON.parse(localStorage.getItem(date));
-    if (!data) return;
-
-    const hours = data.time / (1000 * 60 * 60);
-    const earnings = (hours * RATE_PER_HOUR).toFixed(2);
-
-    const text =
-        `Date: ${date}\n` +
-        `Time: ${formatTime(data.time)}\n` +
-        `Tasks: ${data.tasks}\n` +
-        `Rate: $${RATE_PER_HOUR}/hour\n` +
-        `Earnings: $${earnings}`;
-
-    const blob = new Blob([text], { type: "text/plain" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `work-report-${date}.txt`;
-    link.click();
-}
+onAuthStateChanged(auth, user => {
+  if (user) {
+    loadTodayData();
+  }
+});
 </script>
 
 </body>
