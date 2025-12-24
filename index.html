@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    * { box-sizing: border-box; }
-
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -15,7 +13,6 @@
       justify-content: center;
       padding: 20px;
     }
-
     .card {
       background: white;
       width: 100%;
@@ -24,92 +21,47 @@
       padding: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 15px;
-    }
-
-    input {
+    input, button {
       width: 100%;
       padding: 12px;
       margin-top: 10px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
       font-size: 14px;
     }
-
     button {
-      width: 100%;
-      padding: 14px;
-      margin-top: 12px;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
       cursor: pointer;
+      border-radius: 10px;
+      border: none;
     }
-
     .login-btn { background: #2563eb; color: white; }
     .logout-btn { background: #ef4444; color: white; }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin: 15px 0;
-    }
-
-    .box {
-      background: #f9fafb;
-      padding: 10px;
-      border-radius: 10px;
-      text-align: center;
-    }
-
-    .value {
-      font-weight: bold;
-      margin-top: 4px;
-    }
-
-    .start { background: #22c55e; color: white; }
-    .pause { background: #facc15; }
-    .stop  { background: #ef4444; color: white; }
-    .task  { background: #3b82f6; color: white; }
-
     #app, #login { display: none; }
   </style>
 </head>
 
 <body>
 
-<!-- LOADING -->
 <div class="card" id="loading">
-  <h2>Loading…</h2>
+  <h3>Loading…</h3>
 </div>
 
-<!-- LOGIN -->
 <div class="card" id="login">
-  <h2>Login</h2>
+  <h3>Login</h3>
   <input id="email" type="email" placeholder="Email">
   <input id="password" type="password" placeholder="Password">
   <button class="login-btn" onclick="login()">Login</button>
 </div>
 
-<!-- APP -->
 <div class="card" id="app">
-  <h2>Work Tracker</h2>
+  <h3>Work Tracker</h3>
   <p id="today"></p>
 
-  <div class="stats">
-    <div class="box">Time<div class="value" id="time">00:00:00</div></div>
-    <div class="box">Tasks<div class="value" id="tasks">0</div></div>
-    <div class="box">USD<div class="value" id="earnings">0.00</div></div>
-  </div>
+  <p>Time: <span id="time">00:00:00</span></p>
+  <p>Tasks: <span id="tasks">0</span></p>
+  <p>Earnings: $<span id="earnings">0.00</span></p>
 
-  <button class="start" onclick="startTimer()">Start</button>
-  <button class="pause" onclick="pauseTimer()">Pause</button>
-  <button class="stop" onclick="stopTimer()">Stop</button>
-  <button class="task" onclick="addTask()">+ Task</button>
+  <button onclick="startTimer()">Start</button>
+  <button onclick="pauseTimer()">Pause</button>
+  <button onclick="addTask()">+ Task</button>
   <button class="logout-btn" onclick="logout()">Logout</button>
 </div>
 
@@ -118,7 +70,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getAuth,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   onAuthStateChanged,
   signOut,
   setPersistence,
@@ -137,38 +88,34 @@ const firebaseConfig = {
   appId: "1:645324585996:web:199fe12078850c04e00229"
 };
 
-/* SINGLE USER LOCK */
 const ALLOWED_EMAIL = "ayansau542@gmail.com";
-const ALLOWED_PASSWORD = "fcukai";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* KEEP LOGIN */
 setPersistence(auth, browserLocalPersistence);
 
 const RATE = 4;
-let startTime = null;
 let elapsedTime = 0;
+let startTime = null;
 let timer = null;
 let tasks = 0;
-
 const today = new Date().toISOString().split("T")[0];
 document.getElementById("today").innerText = today;
 
-/* LOGIN */
+/* LOGIN — LOGIN ONLY (NO SIGNUP) */
 window.login = function () {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
 
-  if (email !== ALLOWED_EMAIL || password !== ALLOWED_PASSWORD) {
-    alert("Invalid email or password");
+  if (email !== ALLOWED_EMAIL) {
+    alert("Access denied");
     return;
   }
 
   signInWithEmailAndPassword(auth, email, password)
-    .catch(() => createUserWithEmailAndPassword(auth, email, password));
+    .catch(() => alert("Wrong password"));
 };
 
 /* LOGOUT */
@@ -176,7 +123,7 @@ window.logout = function () {
   signOut(auth);
 };
 
-/* AUTH CHECK */
+/* AUTH STATE */
 onAuthStateChanged(auth, user => {
   document.getElementById("loading").style.display = "none";
 
@@ -207,12 +154,6 @@ window.pauseTimer = function () {
   saveData();
 };
 
-window.stopTimer = function () {
-  clearInterval(timer);
-  timer = null;
-  saveData();
-};
-
 window.addTask = function () {
   tasks++;
   updateUI();
@@ -227,7 +168,7 @@ function updateUI() {
     ((elapsedTime / 3600000) * RATE).toFixed(2);
 }
 
-/* SAVE */
+/* FIREBASE SAVE */
 async function saveData() {
   const user = auth.currentUser;
   if (!user) return;
@@ -238,7 +179,7 @@ async function saveData() {
   });
 }
 
-/* LOAD */
+/* FIREBASE LOAD */
 async function loadData() {
   const user = auth.currentUser;
   if (!user) return;
