@@ -132,9 +132,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* 🔴 USE YOUR OWN EMAIL + PASSWORD */
-const EMAIL = "your@email.com";
-const PASSWORD = "123456"; // min 6 chars
+
+const EMAIL = "ayansau542@gmail.com";
+const PASSWORD = "123456@"; // min 6 chars
 
 signInWithEmailAndPassword(auth, EMAIL, PASSWORD)
   .catch(() => createUserWithEmailAndPassword(auth, EMAIL, PASSWORD));
@@ -231,3 +231,4 @@ onAuthStateChanged(auth, user => {
 
 </body>
 </html>
+
