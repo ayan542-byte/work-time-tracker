@@ -91,7 +91,7 @@
 <div class="card" id="login">
   <h2>Login</h2>
   <input id="email" type="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password (min 6 chars)">
+  <input id="password" type="password" placeholder="Password">
   <button class="login-btn" onclick="login()">Login</button>
 </div>
 
@@ -115,12 +115,19 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+  setPersistence,
+  browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* 🔐 FIREBASE CONFIG (ALREADY FILLED) */
+/* FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAkKVN3_8HM47q4U-kfASwJ4HK0bmmK08o",
   authDomain: "work-tracker-a1314.firebaseapp.com",
@@ -130,12 +137,16 @@ const firebaseConfig = {
   appId: "1:645324585996:web:199fe12078850c04e00229"
 };
 
-/* 🔒 SINGLE USER EMAIL */
+/* SINGLE USER LOCK */
 const ALLOWED_EMAIL = "ayansau542@gmail.com";
+const ALLOWED_PASSWORD = "fcukai";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+/* KEEP LOGIN */
+setPersistence(auth, browserLocalPersistence);
 
 const RATE = 4;
 let startTime = null;
@@ -148,11 +159,11 @@ document.getElementById("today").innerText = today;
 
 /* LOGIN */
 window.login = function () {
-  const email = document.getElementById("email").value;
+  const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
 
-  if (email !== ALLOWED_EMAIL) {
-    alert("Access denied");
+  if (email !== ALLOWED_EMAIL || password !== ALLOWED_PASSWORD) {
+    alert("Invalid email or password");
     return;
   }
 
@@ -165,7 +176,7 @@ window.logout = function () {
   signOut(auth);
 };
 
-/* AUTH STATE */
+/* AUTH CHECK */
 onAuthStateChanged(auth, user => {
   document.getElementById("loading").style.display = "none";
 
@@ -216,7 +227,7 @@ function updateUI() {
     ((elapsedTime / 3600000) * RATE).toFixed(2);
 }
 
-/* SAVE TO FIREBASE */
+/* SAVE */
 async function saveData() {
   const user = auth.currentUser;
   if (!user) return;
@@ -227,7 +238,7 @@ async function saveData() {
   });
 }
 
-/* LOAD FROM FIREBASE */
+/* LOAD */
 async function loadData() {
   const user = auth.currentUser;
   if (!user) return;
