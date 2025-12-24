@@ -9,67 +9,66 @@
 
     body {
       margin: 0;
-      font-family: "Segoe UI", Arial, sans-serif;
+      font-family: Arial, sans-serif;
       background: #f3f4f6;
       display: flex;
       justify-content: center;
       padding: 20px;
     }
 
-    .app {
+    .card {
       background: white;
       width: 100%;
       max-width: 420px;
-      border-radius: 18px;
+      border-radius: 16px;
       padding: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     }
 
     h2 {
       text-align: center;
-      margin-bottom: 5px;
-    }
-
-    .date {
-      text-align: center;
-      color: #666;
-      font-size: 14px;
       margin-bottom: 15px;
     }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .login-btn { background: #2563eb; color: white; }
+    .logout-btn { background: #ef4444; color: white; }
 
     .stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
-      margin-bottom: 20px;
+      margin: 15px 0;
     }
 
-    .card {
+    .box {
       background: #f9fafb;
-      padding: 12px;
-      border-radius: 14px;
+      padding: 10px;
+      border-radius: 10px;
       text-align: center;
     }
 
-    .label {
-      font-size: 12px;
-      color: #666;
-    }
-
     .value {
-      font-size: 18px;
       font-weight: bold;
       margin-top: 4px;
-    }
-
-    button {
-      width: 100%;
-      border: none;
-      padding: 14px;
-      font-size: 16px;
-      border-radius: 14px;
-      margin-top: 10px;
-      cursor: pointer;
     }
 
     .start { background: #22c55e; color: white; }
@@ -77,158 +76,147 @@
     .stop  { background: #ef4444; color: white; }
     .task  { background: #3b82f6; color: white; }
 
-    .section {
-      margin-top: 25px;
-    }
+    #app { display: none; }
   </style>
 </head>
 
 <body>
 
-<div class="app">
+<!-- LOGIN -->
+<div class="card" id="login">
+  <h2>Login</h2>
+  <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password (min 6)">
+  <button class="login-btn" onclick="login()">Login / Sign up</button>
+</div>
+
+<!-- APP -->
+<div class="card" id="app">
   <h2>Work Tracker</h2>
-  <div class="date" id="today"></div>
+  <p id="today"></p>
 
   <div class="stats">
-    <div class="card">
-      <div class="label">Time</div>
-      <div class="value" id="time">00:00:00</div>
-    </div>
-    <div class="card">
-      <div class="label">Tasks</div>
-      <div class="value" id="tasks">0</div>
-    </div>
-    <div class="card">
-      <div class="label">Earnings</div>
-      <div class="value">$<span id="earnings">0.00</span></div>
-    </div>
+    <div class="box">Time<div class="value" id="time">00:00:00</div></div>
+    <div class="box">Tasks<div class="value" id="tasks">0</div></div>
+    <div class="box">USD<div class="value" id="earnings">0.00</div></div>
   </div>
 
   <button class="start" onclick="startTimer()">Start</button>
   <button class="pause" onclick="pauseTimer()">Pause</button>
   <button class="stop" onclick="stopTimer()">Stop</button>
   <button class="task" onclick="addTask()">+ Task</button>
+  <button class="logout-btn" onclick="logout()">Logout</button>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged }
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* 🔴 REPLACE FIREBASE VALUES */
+/* 🔴 REPLACE FIREBASE KEYS */
 const firebaseConfig = {
-  apiKey: "AIzaSyAkKVN3_8HM47q4U-kfASwJ4HK0bmmK08o",
+ apiKey: "AIzaSyAkKVN3_8HM47q4U-kfASwJ4HK0bmmK08o",
   authDomain: "work-tracker-a1314.firebaseapp.com",
   projectId: "work-tracker-a1314",
   storageBucket: "work-tracker-a1314.firebasestorage.app",
   messagingSenderId: "645324585996",
   appId: "1:645324585996:web:199fe12078850c04e00229"
-
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-
-const EMAIL = "ayansau542@gmail.com";
-const PASSWORD = "123456@"; // min 6 chars
-
-signInWithEmailAndPassword(auth, EMAIL, PASSWORD)
-  .catch(() => createUserWithEmailAndPassword(auth, EMAIL, PASSWORD));
-
-const RATE_PER_HOUR = 4;
-
+const RATE = 4;
 let startTime = null;
 let elapsedTime = 0;
-let timerInterval = null;
+let timer = null;
 let tasks = 0;
-
 const today = new Date().toISOString().split("T")[0];
+
 document.getElementById("today").innerText = today;
 
-function startTimer() {
-  if (!timerInterval) {
-    startTime = Date.now() - elapsedTime;
-    timerInterval = setInterval(updateTime, 1000);
+window.login = function () {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  signInWithEmailAndPassword(auth, email, password)
+    .catch(() => createUserWithEmailAndPassword(auth, email, password));
+};
+
+window.logout = function () {
+  signOut(auth);
+};
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    document.getElementById("login").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    loadData();
+  } else {
+    document.getElementById("login").style.display = "block";
+    document.getElementById("app").style.display = "none";
   }
-}
+});
 
-function pauseTimer() {
-  clearInterval(timerInterval);
-  timerInterval = null;
+window.startTimer = function () {
+  if (!timer) {
+    startTime = Date.now() - elapsedTime;
+    timer = setInterval(() => {
+      elapsedTime = Date.now() - startTime;
+      updateUI();
+    }, 1000);
+  }
+};
+
+window.pauseTimer = function () {
+  clearInterval(timer);
+  timer = null;
   saveData();
-}
+};
 
-function stopTimer() {
-  clearInterval(timerInterval);
-  timerInterval = null;
+window.stopTimer = function () {
+  clearInterval(timer);
+  timer = null;
   saveData();
-}
+};
 
-function updateTime() {
-  elapsedTime = Date.now() - startTime;
-  document.getElementById("time").innerText = formatTime(elapsedTime);
-  updateEarnings();
-}
-
-function updateEarnings() {
-  const hours = elapsedTime / (1000 * 60 * 60);
-  document.getElementById("earnings").innerText = (hours * RATE_PER_HOUR).toFixed(2);
-}
-
-function formatTime(ms) {
-  let s = Math.floor(ms / 1000);
-  let h = Math.floor(s / 3600);
-  let m = Math.floor((s % 3600) / 60);
-  s = s % 60;
-  return `${pad(h)}:${pad(m)}:${pad(s)}`;
-}
-
-function pad(n) {
-  return n.toString().padStart(2, "0");
-}
-
-function addTask() {
+window.addTask = function () {
   tasks++;
-  document.getElementById("tasks").innerText = tasks;
+  updateUI();
   saveData();
+};
+
+function updateUI() {
+  document.getElementById("time").innerText = new Date(elapsedTime).toISOString().substr(11, 8);
+  document.getElementById("tasks").innerText = tasks;
+  document.getElementById("earnings").innerText = ((elapsedTime / 3600000) * RATE).toFixed(2);
 }
 
 async function saveData() {
   const user = auth.currentUser;
   if (!user) return;
 
-  await setDoc(doc(db, "work", user.uid, "days", today), {
+  await setDoc(doc(db, "work", user.uid, today), {
     time: elapsedTime,
     tasks: tasks
   });
 }
 
-async function loadTodayData() {
+async function loadData() {
   const user = auth.currentUser;
   if (!user) return;
 
-  const snap = await getDoc(doc(db, "work", user.uid, "days", today));
+  const snap = await getDoc(doc(db, "work", user.uid, today));
   if (snap.exists()) {
-    const d = snap.data();
-    elapsedTime = d.time;
-    tasks = d.tasks;
-    document.getElementById("time").innerText = formatTime(elapsedTime);
-    document.getElementById("tasks").innerText = tasks;
-    updateEarnings();
+    elapsedTime = snap.data().time;
+    tasks = snap.data().tasks;
+    updateUI();
   }
 }
-
-onAuthStateChanged(auth, user => {
-  if (user) {
-    loadTodayData();
-  }
-});
 </script>
 
 </body>
 </html>
-
