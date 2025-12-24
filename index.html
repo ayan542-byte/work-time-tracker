@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -13,7 +15,8 @@
       justify-content: center;
       padding: 20px;
     }
-    .card {
+
+    .app {
       background: white;
       width: 100%;
       max-width: 420px;
@@ -21,184 +24,167 @@
       padding: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     }
-    h3 { text-align: center; }
-    input, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      font-size: 14px;
+
+    h2 {
+      text-align: center;
+      margin-bottom: 5px;
     }
+
+    .date {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: #f9fafb;
+      padding: 12px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .label {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .value {
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 4px;
+    }
+
     button {
+      width: 100%;
       border: none;
-      border-radius: 10px;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 12px;
+      margin-top: 10px;
       cursor: pointer;
     }
-    .login-btn { background: #2563eb; color: white; }
-    .logout-btn { background: #ef4444; color: white; }
-    #app, #login { display: none; }
+
+    .start { background: #22c55e; color: white; }
+    .pause { background: #facc15; }
+    .stop  { background: #ef4444; color: white; }
+    .task  { background: #3b82f6; color: white; }
   </style>
 </head>
 
 <body>
 
-<div class="card" id="loading">
-  <h3>Loading…</h3>
+<div class="app">
+  <h2>Work Tracker</h2>
+  <div class="date" id="today"></div>
+
+  <div class="stats">
+    <div class="card">
+      <div class="label">Time</div>
+      <div class="value" id="time">00:00:00</div>
+    </div>
+    <div class="card">
+      <div class="label">Tasks</div>
+      <div class="value" id="tasks">0</div>
+    </div>
+    <div class="card">
+      <div class="label">Earnings</div>
+      <div class="value">$<span id="earnings">0.00</span></div>
+    </div>
+  </div>
+
+  <button class="start" onclick="startTimer()">Start</button>
+  <button class="pause" onclick="pauseTimer()">Pause</button>
+  <button class="stop" onclick="stopTimer()">Stop</button>
+  <button class="task" onclick="addTask()">+ Task</button>
 </div>
 
-<div class="card" id="login">
-  <h3>Login</h3>
-  <input id="email" type="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password">
-  <button class="login-btn" onclick="login()">Login</button>
-</div>
+<script>
+/* SETTINGS */
+const RATE_PER_HOUR = 4;
 
-<div class="card" id="app">
-  <h3>Work Tracker</h3>
-  <p id="today"></p>
-  <p>Time: <span id="time">00:00:00</span></p>
-  <p>Tasks: <span id="tasks">0</span></p>
-  <p>Earnings: $<span id="earnings">0.00</span></p>
+/* COPY YOUR SCRIPT URL (already here) */
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbw9_ISbvMFv9chIYJXkcEvWXeHYJo6FAqccgNaaCI4ptGpfrDPgHaHxFA12QbuJJmQClQ/exec";
 
-  <button onclick="startTimer()">Start</button>
-  <button onclick="pauseTimer()">Pause</button>
-  <button onclick="addTask()">+ Task</button>
-  <button class="logout-btn" onclick="logout()">Logout</button>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut,
-  setPersistence,
-  browserLocalPersistence
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-/* FIREBASE CONFIG */
-const firebaseConfig = {
-  apiKey: "AIzaSyAkKVN3_8HM47q4U-kfASwJ4HK0bmmK08o",
-  authDomain: "work-tracker-a1314.firebaseapp.com",
-  projectId: "work-tracker-a1314",
-  storageBucket: "work-tracker-a1314.firebasestorage.app",
-  messagingSenderId: "645324585996",
-  appId: "1:645324585996:web:199fe12078850c04e00229"
-};
-
-/* SINGLE USER */
-const ALLOWED_EMAIL = "ayansau542@gmail.com";
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-setPersistence(auth, browserLocalPersistence);
-
-const RATE = 4;
-let elapsedTime = 0;
+/* STATE */
 let startTime = null;
+let elapsedTime = 0;
 let timer = null;
 let tasks = 0;
+
+/* TODAY DATE */
 const today = new Date().toISOString().split("T")[0];
 document.getElementById("today").innerText = today;
 
-/* LOGIN (AUTO CREATE IF NOT EXISTS) */
-window.login = function () {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-
-  if (email !== ALLOWED_EMAIL) {
-    alert("Access denied");
-    return;
-  }
-
-  if (!password || password.length < 6) {
-    alert("Password must be at least 6 characters");
-    return;
-  }
-
-  signInWithEmailAndPassword(auth, email, password)
-    .catch(() => {
-      createUserWithEmailAndPassword(auth, email, password)
-        .catch(err => alert(err.message));
-    });
-};
-
-window.logout = function () {
-  signOut(auth);
-};
-
-/* AUTH STATE */
-onAuthStateChanged(auth, user => {
-  document.getElementById("loading").style.display = "none";
-
-  if (user && user.email === ALLOWED_EMAIL) {
-    document.getElementById("login").style.display = "none";
-    document.getElementById("app").style.display = "block";
-    loadData();
-  } else {
-    document.getElementById("login").style.display = "block";
-    document.getElementById("app").style.display = "none";
-  }
-});
-
-/* TIMER */
-window.startTimer = function () {
+/* TIMER FUNCTIONS */
+function startTimer() {
   if (!timer) {
     startTime = Date.now() - elapsedTime;
-    timer = setInterval(() => {
-      elapsedTime = Date.now() - startTime;
-      updateUI();
-    }, 1000);
+    timer = setInterval(updateTime, 1000);
   }
-};
+}
 
-window.pauseTimer = function () {
+function pauseTimer() {
   clearInterval(timer);
   timer = null;
   saveData();
-};
+}
 
-window.addTask = function () {
-  tasks++;
-  updateUI();
+function stopTimer() {
+  clearInterval(timer);
+  timer = null;
   saveData();
-};
+}
 
-function updateUI() {
-  document.getElementById("time").innerText =
-    new Date(elapsedTime).toISOString().substr(11, 8);
-  document.getElementById("tasks").innerText = tasks;
+function updateTime() {
+  elapsedTime = Date.now() - startTime;
+  document.getElementById("time").innerText = formatTime(elapsedTime);
+  updateEarnings();
+}
+
+function updateEarnings() {
+  const hours = elapsedTime / (1000 * 60 * 60);
   document.getElementById("earnings").innerText =
-    ((elapsedTime / 3600000) * RATE).toFixed(2);
+    (hours * RATE_PER_HOUR).toFixed(2);
 }
 
-/* SAVE */
-async function saveData() {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  await setDoc(doc(db, "work", user.uid, today), {
-    time: elapsedTime,
-    tasks: tasks
-  });
+function addTask() {
+  tasks++;
+  document.getElementById("tasks").innerText = tasks;
+  saveData();
 }
 
-/* LOAD */
-async function loadData() {
-  const user = auth.currentUser;
-  if (!user) return;
+/* FORMAT TIME */
+function formatTime(ms) {
+  let s = Math.floor(ms / 1000);
+  let h = Math.floor(s / 3600);
+  let m = Math.floor((s % 3600) / 60);
+  s = s % 60;
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
 
-  const snap = await getDoc(doc(db, "work", user.uid, today));
-  if (snap.exists()) {
-    elapsedTime = snap.data().time;
-    tasks = snap.data().tasks;
-    updateUI();
-  }
+function pad(n) {
+  return n.toString().padStart(2, "0");
+}
+
+/* SAVE DATA TO GOOGLE SHEETS */
+function saveData() {
+  fetch(SHEET_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      date: today,
+      time: elapsedTime,
+      tasks: tasks
+    })
+  })
+  .catch(err => console.error("Save failed:", err));
 }
 </script>
 
